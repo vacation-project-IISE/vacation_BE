@@ -1,7 +1,6 @@
 {
-    "host": "112.32.33.33",
-    "user": "username",
-    "password": "password",
+    "host": "127.0.0.1",
+    "user": "root",
+    "password": "ldk22035032*",
     "database": "firstdabase"
-    
 }
