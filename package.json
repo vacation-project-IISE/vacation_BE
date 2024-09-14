@@ -1,9 +1,13 @@
 {
-  "dependencies": {
-    "bcrypt": "^5.1.1",
-    "express": "^4.19.2",
-    "mysql": "^2.18.1",
-    "path": "^0.12.7",
-    "serve-static": "^1.15.0"
-  }
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    },
+    "scripts": {
+        "start": "concurrently \"npm run client\" \"npm run server\"",
+        "client": "cd vacation_FE-develop_update && npm start",
+        "server": "cd vacation_BE && node app.js",
+        "build": "react-scripts build",
+        "test": "react-scripts test",
+        "eject": "react-scripts eject"
+    }
 }
