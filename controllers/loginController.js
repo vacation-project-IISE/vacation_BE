@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt"); // bcrypt 모듈을 가져옴
 const {
     getFirestore,
     collection,
@@ -56,4 +57,4 @@ exports.login = async (req, res) => {
         console.error(err.stack); // 스택 트레이스를 함께 출력하여 디버깅에 도움
         return res.status(500).send("서버 오류");
     }
-}
+};
