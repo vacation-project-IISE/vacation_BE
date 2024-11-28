@@ -25,7 +25,7 @@ app.use("/api/cart", cartRoutes);
 
 // 서버 시작
 app.listen(4000, () => {
-    console.log("서버가 4000에서 실행 중입니다. http://localhost:4000");
+    console.log("서버가 포트 4000에서 실행 중입니다.");
 });
 
 module.exports = app;
