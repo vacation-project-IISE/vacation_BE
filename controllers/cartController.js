@@ -5,21 +5,44 @@ const {
     query,
     where,
     getDocs,
-    deleteDoc,
+    updateDoc,
+    arrayUnion,
     doc,
 } = require("firebase/firestore");
 
 // 장바구니에 상품 추가
 exports.addToCart = async (req, res) => {
-    const { user_id, cart_number, product_number } = req.body;
+    const { user_id, product_name, price, category_name } = req.body;
 
     try {
-        // Firestore의 "cart" 컬렉션에 장바구니 데이터 추가
-        await addDoc(collection(db, "cart"), {
-            user_id,
-            cart_number,
-            product_number,
-        });
+        const cartRef = collection(db, "carts");
+        const q = query(cartRef, where("user_id", "==", user_id));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            // 해당 사용자의 장바구니가 없으면 새로 생성
+            await addDoc(cartRef, {
+                user_id,
+                items: [
+                    {
+                        product_name,
+                        price,
+                        category_name,
+                    },
+                ],
+            });
+        } else {
+            // 해당 사용자의 장바구니가 있으면 기존 장바구니에 추가
+            const cartDoc = querySnapshot.docs[0];
+            const cartDocRef = doc(db, "carts", cartDoc.id);
+            await updateDoc(cartDocRef, {
+                items: arrayUnion({
+                    product_name,
+                    price,
+                    category_name,
+                }),
+            });
+        }
 
         return res.status(200).json({ message: "장바구니에 추가되었습니다." });
     } catch (error) {
@@ -30,10 +53,10 @@ exports.addToCart = async (req, res) => {
 
 // 장바구니 조회
 exports.getCart = async (req, res) => {
-    const { user_id } = req.query; // 쿼리 파라미터에서 user_id 받기
+    const { user_id } = req.query;
 
     try {
-        const cartRef = collection(db, "cart");
+        const cartRef = collection(db, "carts");
         const q = query(cartRef, where("user_id", "==", user_id));
         const querySnapshot = await getDocs(q);
 
@@ -43,11 +66,10 @@ exports.getCart = async (req, res) => {
                 .json({ message: "장바구니가 비어있습니다." });
         }
 
-        // 결과 데이터 구성
         const cartItems = querySnapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
-        }));
+        }))[0]; // 하나의 장바구니만 반환
 
         return res.status(200).json(cartItems);
     } catch (error) {
@@ -58,27 +80,35 @@ exports.getCart = async (req, res) => {
 
 // 장바구니에서 상품 삭제
 exports.removeFromCart = async (req, res) => {
-    const { user_id, cart_number, product_number } = req.body;
+    const { user_id, product_name, price, category_name } = req.body;
 
     try {
-        const cartRef = collection(db, "cart");
-        const q = query(
-            cartRef,
-            where("user_id", "==", user_id),
-            where("cart_number", "==", cart_number),
-            where("product_number", "==", product_number)
-        );
+        const cartRef = collection(db, "carts");
+        const q = query(cartRef, where("user_id", "==", user_id));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
             return res.status(404).json({
-                message: "해당 상품이 장바구니에 없습니다.",
+                message: "해당 사용자의 장바구니가 없습니다.",
             });
         }
 
-        // 해당 문서를 삭제
         const cartDoc = querySnapshot.docs[0];
-        await deleteDoc(doc(db, "cart", cartDoc.id));
+        const cartDocRef = doc(db, "carts", cartDoc.id);
+
+        // 기존 항목에서 삭제
+        const cartItems = cartDoc
+            .data()
+            .items.filter(
+                (item) =>
+                    !(
+                        item.product_name === product_name &&
+                        item.price === price &&
+                        item.category_name === category_name
+                    )
+            );
+
+        await updateDoc(cartDocRef, { items: cartItems });
 
         return res
             .status(200)
