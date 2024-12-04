@@ -18,10 +18,12 @@ app.use("/public", static(path.join(__dirname, "public")));
 const registerRoutes = require("./routes/registerRoutes");
 const loginRoutes = require("./routes/loginRoutes");
 const cartRoutes = require("./routes/cartRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes")
 
 app.use("/api/register", registerRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 
 // 서버 시작
 app.listen(4000, () => {
