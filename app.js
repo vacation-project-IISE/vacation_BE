@@ -18,14 +18,18 @@ app.use("/public", static(path.join(__dirname, "public")));
 const registerRoutes = require("./routes/registerRoutes");
 const loginRoutes = require("./routes/loginRoutes");
 const cartRoutes = require("./routes/cartRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+const orderRoutes = require("./routes/orderRoutes");
 
 app.use("/api/register", registerRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/wish", wishlistRoutes);
+app.use("/api/order", orderRoutes);
 
 // 서버 시작
 app.listen(4000, () => {
-    console.log("서버가 포트 4000에서 실행 중입니다.");
+  console.log("서버가 포트 4000에서 실행 중입니다.");
 });
 
 module.exports = app;
