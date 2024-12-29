@@ -6,7 +6,7 @@ const wishlistController = require("../controllers/wishlistController");
 router.post("/", wishlistController.addToWishlist);
 
 // 위시리스트 조회
-router.get("/", wishlistController.getWishlist);
+router.post("/getWishlist", wishlistController.getWishlist);
 
 // 위시리스트 삭제
 router.delete("/", wishlistController.removeFromWishlist);
