@@ -1,4 +1,6 @@
 const { smtpTransport } =require('../config/email');
+const { db } = require('../config/dbconfig');
+const { collection, query, where, getDocs, } = require('firebase/firestore');
 
 var generateRandomNumber = function(min, max) {
     var ranNum = Math.floor(Math.random()*(max-min+1)) + min;
@@ -6,11 +8,22 @@ var generateRandomNumber = function(min, max) {
 };
 
 const emailAuth = async(req,res) => {
-    const number = generateRandomNumber(111111, 999999)
-
     const { email } = req.body;
-    // const email = "vacabe240723@naver.com";
 
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+    
+    let number;
+
+    if(querySnapshot.empty) {
+        number = "해당 이메일로 가입된 사용자가 없습니다.";
+    } else {
+        number = generateRandomNumber(111111, 999999);
+    };
+    // const email = "vacabe240723@naver.com";
+    console.log(number,email,"asdf");
+    
     const mailOptions = {
         from : "vacabe240723@naver.com", 
         to : email, 
