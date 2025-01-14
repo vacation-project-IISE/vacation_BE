@@ -8,8 +8,8 @@ var generateRandomNumber = function(min, max) {
 const emailAuth = async(req,res) => {
     const number = generateRandomNumber(111111, 999999)
 
-    // const { email } = req.body; 
-    const email = "vacabe240723@naver.com";
+    const { email } = req.body;
+    // const email = "vacabe240723@naver.com";
 
     const mailOptions = {
         from : "vacabe240723@naver.com", 
