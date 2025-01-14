@@ -13,6 +13,7 @@ const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
 
 exports.login = async (req, res) => {
   const { user_id, user_pwd } = req.body;
+  console.log("alsiejflasjiej",req.body);
 
   if (!user_id || !user_pwd) {
     return res.status(400).send("이메일과 비밀번호를 입력해주세요.");
