@@ -20,12 +20,14 @@ const loginRoutes = require("./routes/loginRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const wishlistRoutes = require("./routes/wishlistRoutes");
 const orderRoutes = require("./routes/orderRoutes");
+const emailRoutes = require("./routes/emailRoutes");
 
 app.use("/api/register", registerRoutes);
 app.use("/api/login", loginRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wish", wishlistRoutes);
 app.use("/api/order", orderRoutes);
+app.use("/api/email", emailRoutes);
 
 // 서버 시작
 app.listen(4000, () => {
