@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { emailAuth } = require("../controllers/emailController");
+const emailController = require("../controllers/emailController");
 
-router.post("/", emailAuth);
+router.post("/findId", emailController.emailAuthId);
+router.post("/findPw", emailController.emailAuthPw);
 
 module.exports = router;
