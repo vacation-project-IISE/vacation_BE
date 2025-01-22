@@ -39,12 +39,21 @@ exports.emailAuthId = async(req,res) => {
 };
 
 exports.emailAuthPw = async(req,res) => {
-    const { user_id, email, authNumber } = req.body;
-
+    const { email, user_id, authNumber } = req.body;
+    console.log("user_id", user_id);
+    console.log("email", email);
+    console.log("authNumber", authNumber);
     const usersRef = collection(db, "users");
     const q = query(usersRef, where("email", "==", email), where("user_id", "==", user_id));
     const querySnapshot = await getDocs(q);
     
+    const mailOptions = {
+        from : "vacabe240723@naver.com", 
+        to : email, 
+        subject : " 인증 관련 메일 입니다. ",
+        html : '<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>' + authNumber
+    }
+
     if(querySnapshot.empty) {
         // authNumber = "해당 이메일로 가입된 사용자가 없습니다.";
         console.log("해당 이메일로 가입된 사용자가 없습니다.해당 이메일로 가입된 사용자가 없습니다.해당 이메일로 가입된 사용자가 없습니다.해당 이메일로 가입된 사용자가 없습니다.");
@@ -66,12 +75,7 @@ exports.emailAuthPw = async(req,res) => {
         });
     };
 
-    const mailOptions = {
-        from : "vacabe240723@naver.com", 
-        to : email, 
-        subject : " 인증 관련 메일 입니다. ",
-        html : '<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>' + authNumber
-    }
+    
 };
 
 // 이메일이 틀리면 즉각적인 반응?
