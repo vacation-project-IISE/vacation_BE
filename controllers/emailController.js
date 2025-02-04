@@ -1,6 +1,7 @@
 const { smtpTransport } =require('../config/email');
 const { db } = require('../config/dbconfig');
-const { collection, query, where, getDocs, } = require('firebase/firestore');
+const { collection, query, where, getDocs, updateDoc} = require('firebase/firestore');
+const bcrypt = require("bcryptjs");
 
 exports.emailAuthId = async(req,res) => {
     const { email, authNumber } = req.body;
