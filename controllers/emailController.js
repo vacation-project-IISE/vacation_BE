@@ -7,7 +7,7 @@ const {
     getDocs,
     updateDoc,
 } = require("firebase/firestore");
-const bcrypt = require("bcryptjs"); // ✅ 이 코드가 있어야 함
+const bcrypt = require("bcryptjs");
 
 exports.emailAuthId = async (req, res) => {
     const { email, authNumber } = req.body;
@@ -18,43 +18,40 @@ exports.emailAuthId = async (req, res) => {
 
     // const email = "vacabe240723@naver.com";
 
+    if (querySnapshot.empty) {
+        return res.status(404).json({
+            ok: false,
+            message: "해당 이메일로 가입된 사용자가 없습니다.",
+        });
+    }
+
+    const userData = querySnapshot.docs[0].data();
+    console.log("찾은 사용자 데이터:", userData); // user_id 값 확인
+
     const mailOptions = {
         from: "vacabe240723@naver.com",
         to: email,
         subject: " 인증 관련 메일 입니다. ",
         html: "<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>" + authNumber,
     };
-    if (querySnapshot.empty) {
-        return res.status(404).json({
-            ok: false,
-            message: "해당 이메일로 가입된 사용자가 없습니다.",
-        });
-    } else {
-        smtpTransport.sendMail(mailOptions, (err, response) => {
-            console.log("response", response);
-            //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
-            if (err) {
-                res.json({ ok: false, msg: " 메일 전송에 실패하였습니다. " });
-                smtpTransport.close(); //전송종료
-                return;
-            } else {
-                res.json({
-                    ok: true,
-                    msg: " 메일 전송에 성공하였습니다. ",
-                    authNum: authNumber,
-                });
-                smtpTransport.close(); //전송종료
-                return;
-            }
-        });
-    }
+
+    smtpTransport.sendMail(mailOptions, (err, response) => {
+        console.log("response", response);
+        if (err) {
+            res.json({ ok: false, msg: "메일 전송에 실패하였습니다." });
+        } else {
+            res.json({
+                ok: true,
+                msg: "메일 전송에 성공하였습니다.",
+                user_id: userData.user_id, // ✅ user_id 사용
+            });
+        }
+        smtpTransport.close(); // ✅ 전송 종료는 중복 호출하지 않도록 수정
+    });
 };
 
 exports.emailAuthPw = async (req, res) => {
     const { email, user_id, authNumber } = req.body;
-    console.log("user_id", user_id);
-    console.log("email", email);
-    console.log("authNumber", authNumber);
     const usersRef = collection(db, "users");
     const q = query(
         usersRef,
@@ -71,10 +68,6 @@ exports.emailAuthPw = async (req, res) => {
     };
 
     if (querySnapshot.empty) {
-        // authNumber = "해당 이메일로 가입된 사용자가 없습니다.";
-        console.log(
-            "해당 이메일로 가입된 사용자가 없습니다.해당 이메일로 가입된 사용자가 없습니다.해당 이메일로 가입된 사용자가 없습니다.해당 이메일로 가입된 사용자가 없습니다."
-        );
         return res.status(404).json({
             ok: false,
             message: "해당 이메일로 가입된 사용자가 없습니다.",
