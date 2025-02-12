@@ -3,6 +3,28 @@ const { db } = require('../config/dbconfig');
 const { collection, query, where, getDocs, updateDoc} = require('firebase/firestore');
 const bcrypt = require("bcryptjs");
 
+const sendMailAsync = (email, authNumber) => {
+    return new Promise((resolve, reject) => {
+        const mailOptions = {
+            from: "vacabe240723@naver.com",
+            to: email,
+            subject: "인증 관련 메일입니다.",
+            html: `<h1>인증번호를 입력해주세요</h1><p>${authNumber}</p>`
+        };
+
+        smtpTransport.sendMail(mailOptions, (err, response) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(response);
+            }
+        });
+
+        setTimeout(() => reject(new Error("SMTP 응답 시간 초과")), 10000);
+    });
+};
+
+
 exports.emailAuthId = async(req,res) => {
     const { email, authNumber } = req.body;
 
@@ -11,31 +33,55 @@ exports.emailAuthId = async(req,res) => {
     const querySnapshot = await getDocs(q);
 
     // const email = "vacabe240723@naver.com";
-    
-    const mailOptions = {
-        from : "vacabe240723@naver.com", 
-        to : email, 
-        subject : " 인증 관련 메일 입니다. ",
-        html : '<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>' + authNumber
+    try {
+        console.log("이메일 인증 요청 시작");
+        console.log("요청 데이터:", req.body);
+
+        const { email, authNumber } = req.body;
+        if (!email || !authNumber) {
+            console.log("요청 데이터가 부족합니다.");
+            return res.status(400).json({ ok: false, msg: "이메일 또는 인증번호 누락" });
+        }
+
+        // 이메일 인증 요청 중복 방지 로직
+        console.log("메일 전송 시도...");
+        await sendMailAsync(email, authNumber);
+
+        console.log("응답 전송 완료");
+        console.log("user_id:", querySnapshot.docs[0].data().user_id);
+        return res.json({ ok: true, msg: "메일 전송 성공", authNum: authNumber, user_id : querySnapshot.docs[0].data().user_id });
+
+    } catch (error) {
+        console.error("서버 오류 발생:", error);
+        return res.status(500).json({ ok: false, msg: "서버 오류 발생" });
     }
-    if(querySnapshot.empty) {
-        return res.status(404).json({ok : false, message: "해당 이메일로 가입된 사용자가 없습니다." });
-    } else {
-        smtpTransport.sendMail(mailOptions, (err, response) => {
-            console.log("response", response);
-            //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
-            if(err) {
-                res.json({ok : false , msg : ' 메일 전송에 실패하였습니다. '})
-                smtpTransport.close() //전송종료
-                return
-            } else {
-                res.json({ok: true, msg: ' 메일 전송에 성공하였습니다. ', user_id : querySnapshot.docs[0].data().user_id})
-                smtpTransport.close() //전송종료
-                return 
+    // const mailOptions = {
+    //     from : "vacabe240723@naver.com", 
+    //     to : email, 
+    //     subject : " 인증 관련 메일 입니다. ",
+    //     html : '<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>' + authNumber
+    // }
+    // if(querySnapshot.empty) {
+    //     return res.status(404).json({ok : false, message: "해당 이메일로 가입된 사용자가 없습니다." });
+    // } else {
+    //     smtpTransport.sendMail(mailOptions, (err, response) => {
+    //         console.log("response", response);
+    //         //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
+    //         if(err) {
+    //             res.json({ok : false , msg : ' 메일 전송에 실패하였습니다. '})
+    //             smtpTransport.close() //전송종료
+    //             return
+    //         } else {
+    //             res.json({ok: true, msg: ' 메일 전송에 성공하였습니다. ', user_id : querySnapshot.docs[0].data().user_id})
+    //             smtpTransport.close() //전송종료
+    //             return 
     
-            }
-        });
-    };
+    //         }
+    //     });
+    //     console.log("인증번호:", authNumber);
+    //     console.log("user_id:", querySnapshot.docs[0].data().user_id);
+    //     return res.status(200).json({ok: true, message: "인증번호 전송 성공", user_id : querySnapshot.docs[0].data().user_id, authNumber : authNumber});
+    // };
     
 };
 
@@ -45,32 +91,47 @@ exports.emailAuthPw = async(req,res) => {
     const q = query(usersRef, where("email", "==", email), where("user_id", "==", user_id));
     const querySnapshot = await getDocs(q);
     
-    const mailOptions = {
-        from : "vacabe240723@naver.com", 
-        to : email, 
-        subject : " 인증 관련 메일 입니다. ",
-        html : '<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>' + authNumber
+    if (querySnapshot.empty) {
+        return res.status(404).json({ ok: false, message: "해당 이메일로 가입된 사용자가 없습니다." });
     }
 
-    if(querySnapshot.empty) {
-        return res.status(404).json({ok : false, message: "해당 이메일로 가입된 사용자가 없습니다." });
-    } else {
-        smtpTransport.sendMail(mailOptions, (err, response) => {
-            console.log("response", response);
-            //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
-            if(err) {
-                res.json({ok : false , msg : ' 메일 전송에 실패하였습니다. '})
-                smtpTransport.close() //전송종료
-                return
-            } else {
-                res.json({ok: true, msg: ' 메일 전송에 성공하였습니다. ', authNum : authNumber})
-                smtpTransport.close() //전송종료
-                return 
-    
-            }
-        });
-    };
+    try {
+        console.log("메일 전송 시도 중중");
+        await sendMailAsync(email, authNumber);
 
+        res.json({ ok: true, msg: "메일 전송에 성공하였습니다.", authNum: authNumber });
+    } catch (err) {
+        console.error("메일 전송 실패", err);
+        res.json({ ok: false, msg: "메일 전송에 실패하였습니다." });
+    }
+
+
+    // const mailOptions = {
+    //     from : "vacabe240723@naver.com", 
+    //     to : email, 
+    //     subject : " 인증 관련 메일 입니다. ",
+    //     html : '<h1>인증번호를 입력해주세요 \n\n\n\n\n\n</h1>' + authNumber
+    // }
+
+    // if(querySnapshot.empty) {
+    //     return res.status(404).json({ok : false, message: "해당 이메일로 가입된 사용자가 없습니다." });
+    // } else {
+    //     smtpTransport.sendMail(mailOptions, (err, response) => {
+    //         console.log("response", response);
+    //         //첫번째 인자는 위에서 설정한 mailOption을 넣어주고 두번째 인자로는 콜백함수.
+    //         if(err) {
+    //             res.json({ok : false , msg : ' 메일 전송에 실패하였습니다. '})
+    //             smtpTransport.close() //전송종료
+    //             return
+    //         } else {
+    //             res.json({ok: true, msg: ' 메일 전송에 성공하였습니다. ', authNum : authNumber})
+    //             smtpTransport.close() //전송종료
+    //             return 
+    
+    //         }
+    //     });
+    // };
+    
     
 };
 
